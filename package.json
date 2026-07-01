@@ -1,0 +1,12 @@
+{
+  "name": "gestao-polo-ceeb-cloudflare",
+  "version": "2.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "wrangler pages dev public --kv CEEB_DATA --compatibility-date=2026-07-01",
+    "deploy": "wrangler pages deploy public --project-name gestao-polo-ceeb-cloudflare"
+  },
+  "devDependencies": {
+    "wrangler": "latest"
+  }
+}

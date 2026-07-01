@@ -1,0 +1,15 @@
+{
+  "name": "Gestão de Polo CEEB",
+  "short_name": "CEEB Polo",
+  "description": "Sistema web de gestão de polo CEEB hospedado no Cloudflare.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#f7fbf8",
+  "theme_color": "#0f7a3b",
+  "icons": [
+    {"src":"/assets/logo_ceeb_sidebar.png", "sizes":"192x192", "type":"image/png", "purpose":"any maskable"},
+    {"src":"/assets/logo_ceeb_sidebar.png", "sizes":"512x512", "type":"image/png", "purpose":"any maskable"}
+  ]
+}
