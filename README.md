@@ -6,7 +6,7 @@ Sistema web responsivo e instalável como app (PWA), criado para Cloudflare Page
 
 Suba estes arquivos exatamente assim:
 
-```
+``` 
 public/
 functions/
 tools/
