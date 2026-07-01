@@ -1,1 +1,83 @@
 :root{--green:#0f7a3b;--green2:#18a957;--soft:#eefaf2;--bg:#f7fbf8;--ink:#102015;--muted:#617269;--line:#d9eadf;--danger:#ef5545;--card:#fff}*{box-sizing:border-box}body{margin:0;font-family:Inter,Arial,sans-serif;background:linear-gradient(135deg,#f5fff8,#eaf7ff);color:var(--ink)}button,input,select,textarea{font:inherit}button{cursor:pointer;border:0}.login-body{min-height:100vh;display:grid;place-items:center;padding:24px}.login-shell{width:min(1080px,100%);display:grid;grid-template-columns:1.2fr .8fr;gap:22px}.brand-card,.login-card,.card{background:rgba(255,255,255,.86);border:1px solid var(--line);box-shadow:0 16px 45px rgba(15,122,59,.12);border-radius:28px;padding:30px}.brand-card{background:linear-gradient(135deg,#0f7a3b,#24b768);color:#fff}.school-logo{width:82px;height:82px;border-radius:25px;background:#fff;color:var(--green);display:grid;place-items:center;font-size:28px;font-weight:900;border:4px solid rgba(255,255,255,.5)}.school-logo.small{width:48px;height:48px;border-radius:16px;font-size:17px}.feature-grid{display:flex;gap:10px;flex-wrap:wrap;margin-top:22px}.feature-grid span{background:rgba(255,255,255,.18);padding:10px 14px;border-radius:999px}.muted{color:var(--muted)}label{display:block;margin:15px 0 7px;font-weight:700}input,select,textarea{width:100%;padding:13px 14px;border-radius:14px;border:1px solid var(--line);background:#fff;outline:none}textarea{min-height:100px}.primary,.success{background:linear-gradient(135deg,var(--green),var(--green2));color:#fff;padding:13px 18px;border-radius:14px;font-weight:800;margin-top:16px}.secondary{background:#e9f7ef;color:var(--green);padding:11px 14px;border-radius:12px;font-weight:800}.danger{background:var(--danger);color:#fff;padding:11px 14px;border-radius:12px;font-weight:800}.msg{margin-top:12px;font-weight:700}.app{display:grid;grid-template-columns:280px 1fr;min-height:100vh}.sidebar{background:#07190f;color:#fff;padding:18px;position:sticky;top:0;height:100vh;overflow:auto}.brand{display:flex;align-items:center;gap:12px;margin-bottom:18px}.brand small{display:block;color:#b8d9c3;margin-top:4px}.menu-toggle{display:none;width:100%;background:#11321f;color:#fff;border:1px solid #225d38;border-radius:12px;padding:12px;margin-bottom:10px}nav p{color:#a7d6b7;font-size:12px;letter-spacing:.08em;font-weight:900;margin:18px 0 8px}nav button{width:100%;text-align:left;background:#122238;color:#fff;border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:12px 13px;margin:5px 0}nav button:hover,nav button.active{background:linear-gradient(135deg,var(--green),#0b8d8a)}.content{padding:24px}.top{background:linear-gradient(135deg,#e7fff0,#dff7ff);border:1px solid var(--line);border-radius:24px;padding:20px;display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:20px}.top h1{margin:0}.top p{margin:6px 0 0;color:var(--muted)}.session-card{background:rgba(255,255,255,.75);border:1px solid var(--line);border-radius:18px;padding:14px 18px;display:grid;gap:4px;min-width:220px}.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px}.grid3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px}.card h2,.card h3{margin-top:0}.stat{padding:20px;border-radius:22px;background:linear-gradient(135deg,#fff,#f0fff5);border:1px solid var(--line)}.stat b{font-size:32px;display:block}.actions{display:flex;gap:10px;flex-wrap:wrap;align-items:center}.table-wrap{overflow:auto;border:1px solid var(--line);border-radius:16px;background:#fff}table{width:100%;border-collapse:collapse;min-width:720px}th,td{padding:12px;border-bottom:1px solid var(--line);text-align:left;font-size:14px}th{background:#f0faf4;color:#174c2a}.pill{display:inline-flex;padding:6px 10px;border-radius:999px;font-weight:800;font-size:12px;background:#e9f7ef;color:var(--green)}.pill.blocked{background:#ffeceb;color:#c23128}.form-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.full{grid-column:1/-1}@media(max-width:900px){.login-shell,.app,.grid,.grid3,.form-grid{grid-template-columns:1fr}.sidebar{position:relative;height:auto}.menu-toggle{display:block}#menu{display:none}#menu.open{display:block}.top{align-items:stretch;flex-direction:column}.content{padding:14px}.brand-card,.login-card,.card{border-radius:20px;padding:20px}}@media(max-width:520px){.login-body{padding:12px}.actions{flex-direction:column;align-items:stretch}.actions button{width:100%}.session-card{min-width:0}.top h1{font-size:25px}}
+
+/* Atualização visual CEEB: logo oficial destacada e tela inicial limpa */
+.brand-card-ceeb{
+  background:linear-gradient(145deg,#ffffff 0%,#f8fffb 58%,#ecfff4 100%);
+  color:var(--ink);
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  text-align:center;
+  min-height:520px;
+  position:relative;
+  overflow:hidden;
+}
+.brand-card-ceeb::before{
+  content:"";
+  position:absolute;
+  inset:auto -90px -140px -90px;
+  height:260px;
+  background:radial-gradient(circle at center,rgba(15,122,59,.14),transparent 70%);
+}
+.hero-logo-wrap{
+  width:min(360px,82vw);
+  aspect-ratio:1/1;
+  background:#fff;
+  border:1px solid rgba(15,122,59,.12);
+  border-radius:34px;
+  padding:22px;
+  box-shadow:0 22px 60px rgba(15,122,59,.16);
+  display:grid;
+  place-items:center;
+  margin-bottom:24px;
+  position:relative;
+  z-index:1;
+}
+.hero-logo{
+  width:100%;
+  height:100%;
+  object-fit:contain;
+  display:block;
+}
+.brand-card-ceeb h1{
+  margin:0 0 12px;
+  font-size:clamp(34px,5vw,58px);
+  line-height:1;
+  color:var(--green);
+  letter-spacing:-.04em;
+  position:relative;
+  z-index:1;
+}
+.brand-card-ceeb p{
+  margin:0;
+  max-width:620px;
+  font-size:clamp(16px,2vw,22px);
+  color:#25382d;
+  line-height:1.45;
+  position:relative;
+  z-index:1;
+}
+.hero-line{
+  width:150px;
+  height:5px;
+  border-radius:999px;
+  background:linear-gradient(90deg,var(--green),var(--green2));
+  margin-top:30px;
+  position:relative;
+  z-index:1;
+}
+.school-logo-img.small{
+  width:54px;
+  height:54px;
+  object-fit:contain;
+  border-radius:16px;
+  background:#fff;
+  padding:4px;
+  box-shadow:0 8px 20px rgba(0,0,0,.12);
+  flex:0 0 auto;
+}
+@media(max-width:900px){
+  .brand-card-ceeb{min-height:auto;padding:28px 20px}
+  .hero-logo-wrap{width:min(280px,78vw);border-radius:28px;padding:18px}
+}

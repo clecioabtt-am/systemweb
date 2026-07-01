@@ -1,1 +1,39 @@
-<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#0f7a3b"><link rel="manifest" href="/manifest.webmanifest"><link rel="stylesheet" href="/assets/styles.css"><title>Login - Gestão de Polo CEEB</title></head><body class="login-body"><main class="login-shell"><section class="brand-card"><div class="school-logo">CE</div><h1>Gestão de Polo - CEEB</h1><p>Sistema web completo para coordenação, financeiro, links de pagamento e prestação de contas.</p><div class="feature-grid"><span>Cloudflare</span><span>PWA</span><span>Responsivo</span><span>Sem Supabase</span></div></section><section class="login-card"><h2>Acessar sistema</h2><p class="muted">Escolha o perfil e informe sua chave de acesso.</p><label>Perfil</label><select id="role"><option value="support">Suporte</option><option value="coordinator">Coordenador</option></select><label>Chave de acesso</label><input id="key" type="password" placeholder="Digite sua chave"><button class="primary" onclick="login()">Entrar</button><div id="loginMsg" class="msg"></div></section></main><script src="/assets/app.js"></script><script>registerSW();</script></body></html>
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#0f7a3b">
+  <link rel="manifest" href="/manifest.webmanifest">
+  <link rel="stylesheet" href="/assets/styles.css">
+  <title>Login - Gestão de Polo CEEB</title>
+</head>
+<body class="login-body">
+  <main class="login-shell">
+    <section class="brand-card brand-card-ceeb">
+      <div class="hero-logo-wrap">
+        <img src="/assets/logo-ceeb.jpeg" alt="Centro Educacional Emmanuel Butel" class="hero-logo">
+      </div>
+      <h1>Gestão de Polo - CEEB</h1>
+      <p>Sistema web completo para coordenação, financeiro, links de pagamento e prestação de contas.</p>
+      <div class="hero-line"></div>
+    </section>
+
+    <section class="login-card">
+      <h2>Acessar sistema</h2>
+      <p class="muted">Escolha o perfil e informe sua chave de acesso.</p>
+      <label>Perfil</label>
+      <select id="role">
+        <option value="support">Suporte</option>
+        <option value="coordinator">Coordenador</option>
+      </select>
+      <label>Chave de acesso</label>
+      <input id="key" type="password" placeholder="Digite sua chave">
+      <button class="primary" onclick="login()">Entrar</button>
+      <div id="loginMsg" class="msg"></div>
+    </section>
+  </main>
+  <script src="/assets/app.js"></script>
+  <script>registerSW();</script>
+</body>
+</html>
