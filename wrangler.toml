@@ -1,8 +1,0 @@
-name = "gestao-polo-ceeb-cloudflare"
-compatibility_date = "2026-07-01"
-pages_build_output_dir = "public"
-
-[[kv_namespaces]]
-binding = "CEEB_DATA"
-id = "COLOQUE_AQUI_O_ID_DO_KV"
-preview_id = "COLOQUE_AQUI_O_PREVIEW_ID_DO_KV"
