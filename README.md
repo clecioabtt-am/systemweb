@@ -28,7 +28,6 @@ public/
 functions/
 schema.sql
 package.json
-wrangler.toml
 README.md
 ```
 
@@ -156,7 +155,7 @@ Observação: a API do Asaas não possui um filtro direto universal por `complem
 
 ## Correção importante para Cloudflare Pages
 
-Este projeto usa os bindings `CEEB_KV` e `CEEB_DB` configurados no painel do Cloudflare Pages:
+Nesta versão, o arquivo `wrangler.toml` foi removido para que os bindings sejam configurados diretamente pelo painel do Cloudflare Pages. Depois de subir este ZIP no GitHub, entre em **Settings > Bindings** e adicione `CEEB_KV` e `CEEB_DB`.
 
 - Settings > Bindings > KV namespace: `CEEB_KV`
 - Settings > Bindings > D1 database: `CEEB_DB`
