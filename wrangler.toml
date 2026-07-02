@@ -1,8 +1,0 @@
-name = "gestao-polo-ceeb"
-compatibility_date = "2026-07-01"
-pages_build_output_dir = "public"
-
-# IMPORTANTE:
-# Os bindings CEEB_KV e CEEB_DB devem ser configurados diretamente
-# no painel do Cloudflare Pages em Settings > Bindings.
-# Não coloque IDs de KV/D1 aqui se o deploy for feito pelo GitHub/Pages.
