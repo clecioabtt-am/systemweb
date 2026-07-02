@@ -152,3 +152,13 @@ Esta versão ajusta os módulos pedidos:
 - A chave `ASAAS_API_KEY` continua protegida nas variáveis do Cloudflare Pages; ela nunca é exposta no navegador.
 
 Observação: a API do Asaas não possui um filtro direto universal por `complement`; por isso a Function busca clientes paginados e filtra o campo `complement` no backend. Para contas com muitos clientes, use nomes de polos padronizados para facilitar a busca.
+
+
+## Correção importante para Cloudflare Pages
+
+Este projeto usa os bindings `CEEB_KV` e `CEEB_DB` configurados no painel do Cloudflare Pages:
+
+- Settings > Bindings > KV namespace: `CEEB_KV`
+- Settings > Bindings > D1 database: `CEEB_DB`
+
+O arquivo `wrangler.toml` **não contém IDs de KV/D1**, porque IDs fictícios fazem o deploy falhar com erro `Invalid KV namespace ID`.
