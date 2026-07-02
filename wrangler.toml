@@ -1,0 +1,12 @@
+name = "gestao-polo-ceeb"
+compatibility_date = "2026-07-01"
+pages_build_output_dir = "public"
+
+[[kv_namespaces]]
+binding = "CEEB_KV"
+id = "COLE_AQUI_O_ID_DO_KV_SE_USAR_WRANGLER"
+
+[[d1_databases]]
+binding = "CEEB_DB"
+database_name = "ceeb_db"
+database_id = "COLE_AQUI_O_ID_DO_D1_SE_USAR_WRANGLER"

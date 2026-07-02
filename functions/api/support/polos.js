@@ -1,0 +1,3 @@
+import {json, body, uid, requireUser, requireRole, log} from '../_lib.js';
+export async function onRequestGet({request, env}){ const u=await requireUser(request,env); if(!u)return json({ok:false},401); const rows=await env.CEEB_DB.prepare('SELECT * FROM polos ORDER BY name').all(); return json({ok:true,data:rows.results}); }
+export async function onRequestPost({request, env}){ const {user,error}=await requireRole(request,env,'support'); if(error)return error; const b=await body(request); if(!b.name)return json({ok:false,error:'Nome obrigatório'},400); const id=uid('polo'); await env.CEEB_DB.prepare('INSERT INTO polos (id,name,city) VALUES (?,?,?)').bind(id,b.name,b.city||'').run(); await log(env,user,'Criou polo','polo',id,b); return json({ok:true,id}); }
