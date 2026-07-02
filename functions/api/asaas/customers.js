@@ -18,7 +18,7 @@ async function listAllCustomersByComplement(env, complement){
   const cached=await env.CEEB_KV.get(cacheKey,'json').catch(()=>null);
   if(cached) return cached;
   let offset=0, limit=100, out=[];
-  for(let page=0; page<20; page++){
+  for(let page=0; page<100; page++){
     const r=await asaas(env, `/customers?limit=${limit}&offset=${offset}`);
     if(!r.ok) throw new Error(JSON.stringify(r.data));
     const data=Array.isArray(r.data?.data)?r.data.data:[];
@@ -60,8 +60,9 @@ export async function onRequestPatch({request, env}){
   let updated=0, failed=0, errors=[];
   for(const c of customers){
     const id=c.id||c.asaasId||c.asaas_customer_id; if(!id){failed++; continue;}
-    const r=await asaas(env, `/customers/${id}`, {method:'POST', body:JSON.stringify({complement})});
-    if(r.ok){ updated++; await env.CEEB_DB.prepare('UPDATE students SET complement=?, updated_at=CURRENT_TIMESTAMP WHERE asaas_customer_id=?').bind(complement,id).run().catch(()=>{}); }
+    const nextComplement=String(c.complement||complement).trim();
+    const r=await asaas(env, `/customers/${id}`, {method:'POST', body:JSON.stringify({complement:nextComplement})});
+    if(r.ok){ updated++; await env.CEEB_DB.prepare('UPDATE students SET complement=?, updated_at=CURRENT_TIMESTAMP WHERE asaas_customer_id=?').bind(nextComplement,id).run().catch(()=>{}); }
     else { failed++; errors.push({id,detail:r.data}); }
   }
   await env.CEEB_KV.delete('asaas:customers:complement:'+String(b.oldComplement||'').trim().toLowerCase()).catch(()=>{});

@@ -26,10 +26,33 @@ export async function ensureSchema(env){
 export async function log(env, user, action, entity='', entity_id='', meta={}){ try{ await env.CEEB_DB.prepare('INSERT INTO activity_logs (id,actor_id,actor_name,action,entity,entity_id,meta) VALUES (?,?,?,?,?,?,?)').bind(uid('log'), user?.id||'', user?.name||'', action, entity, entity_id, JSON.stringify(meta)).run(); }catch(e){} }
 export async function makeSession(env,user){ const token=crypto.randomUUID()+crypto.randomUUID(); await env.CEEB_KV.put('sess:'+token, JSON.stringify({id:user.id,role:user.role,name:user.name,polo_id:user.polo_id||null}), {expirationTtl: 60*60*12}); return token; }
 export async function requireUser(req, env){
-  const auth=req.headers.get('authorization')||''; const token=auth.replace(/^Bearer\s+/i,''); if(!token) return null;
-  const data=await env.CEEB_KV.get('sess:'+token,'json'); if(!data) return null;
-  const u=await env.CEEB_DB.prepare('SELECT * FROM users WHERE id=?').bind(data.id).first();
-  if(!u || !u.active) return null; if(u.expires_at && new Date(u.expires_at)<new Date()) return null; return u;
+  const auth=req.headers.get('authorization')||'';
+  const token=auth.replace(/^Bearer\s+/i,'');
+  if(!token) return null;
+
+  // Compatibilidade com as duas versões do projeto:
+  // nova: sess:<token> | versão antiga do painel: session:<token>
+  let data = await env.CEEB_KV.get('sess:'+token,'json').catch(()=>null);
+  if(!data) data = await env.CEEB_KV.get('session:'+token,'json').catch(()=>null);
+  if(!data) return null;
+
+  if(data.id){
+    const u=await env.CEEB_DB.prepare('SELECT * FROM users WHERE id=?').bind(data.id).first().catch(()=>null);
+    if(u){
+      if(!u.active) return null;
+      if(u.expires_at && new Date(u.expires_at)<new Date()) return null;
+      return u;
+    }
+  }
+
+  // Fallback para sessões criadas pelo painel legado baseado em KV.
+  if(data.role==='support'){
+    return {id:'support-master', role:'support', name:data.name||'Suporte CEEB', active:1, polo_id:null};
+  }
+  if(data.role==='coordinator'){
+    return {id:data.id||'coordinator', role:'coordinator', name:data.name||'Coordenador', active:1, polo_id:data.polo_id||null, polo:data.polo||null, expires_at:data.expiresAt||null};
+  }
+  return null;
 }
 export async function requireRole(req, env, role){ const u=await requireUser(req,env); if(!u || (role && u.role!==role)) return {error:json({ok:false,error:'Acesso não autorizado'},401)}; return {user:u}; }
 export function asaasBase(env){ return env.ASAAS_ENV==='production' ? 'https://api.asaas.com/v3' : 'https://sandbox.asaas.com/api/v3'; }

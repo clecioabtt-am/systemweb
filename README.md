@@ -1,163 +1,54 @@
-# Gestão de Polo CEEB Web 3.0
+# Gestão de Polo CEEB — Cloudflare + Asaas
 
-Sistema web responsivo para Cloudflare Pages, com Cloudflare Functions, D1, KV, PWA e integração segura com API Asaas.
-
-## O que está incluído
-
-- Login de Suporte e Coordenador
-- Suporte cria, bloqueia, libera e remove coordenadores
-- Chave de acesso com expiração
-- Logs de atividades
-- Cadastro de polos
-- Cadastro e atualização de alunos
-- Cadastro em lote por CSV simples
-- Emissão de cobranças via Asaas
-- Criação de links de pagamento via Asaas
-- Sincronização de status de faturas com Asaas
-- Prestação de contas por polo
-- Exportação CSV para Excel
-- Layout verde/branco com logo CEEB
-- PWA instalável no Android/iPhone
-
-## Estrutura correta no GitHub
-
-Envie os arquivos para o GitHub deixando esta estrutura na raiz do repositório:
-
-```txt
-public/
-functions/
-schema.sql
-package.json
-README.md
-```
+Projeto pronto para GitHub + Cloudflare Pages.
 
 ## Configuração no Cloudflare Pages
 
-Em **Build settings**:
-
-```txt
-Framework preset: None
-Build command: deixar vazio
-Build output directory: public
-Root directory: deixar vazio
-```
-
-## Bindings obrigatórios
-
-No projeto Pages, vá em **Settings > Bindings** e crie:
-
-### KV Namespace
-
-```txt
-Variable name: CEEB_KV
-KV namespace: CEEB_KV
-```
-
-### D1 Database
-
-O banco no Cloudflare deve ter nome minúsculo, por exemplo:
-
-```txt
-ceeb_db
-```
-
-No binding do Pages use:
-
-```txt
-Variable name: CEEB_DB
-Database: ceeb_db
-```
+- Framework preset: **None**
+- Build command: deixe vazio
+- Build output directory: **public**
 
 ## Variáveis obrigatórias
 
-Em **Settings > Variables and secrets**, crie:
+Em **Settings → Variables and secrets**:
 
-```txt
-SUPPORT_MASTER_KEY = sua chave mestra do suporte
-ASAAS_API_KEY = sua chave de API do Asaas
-ASAAS_ENV = production
-```
+- `ASAAS_API_KEY` = sua chave do Asaas
+- `ASAAS_ENV` = `production` ou `sandbox`
+- `SUPPORT_MASTER_KEY` = chave de acesso do suporte
 
-Para testes do Asaas:
+## Bindings obrigatórios
 
-```txt
-ASAAS_ENV = sandbox
-```
+Em **Settings → Bindings**:
 
-## Primeiro acesso
+- KV namespace: `CEEB_KV`
+- D1 database: `CEEB_DB` apontando para o banco `ceeb_db`
 
-Depois do deploy, acesse:
+## Banco D1
 
-```txt
-https://seu-projeto.pages.dev/login
-```
+Execute o arquivo `schema.sql` no console do D1 usando **Run all in sequence**.
 
-Na tela de login, clique em **Inicializar banco**.
+Tabelas criadas:
 
-Depois entre como:
+- `users`
+- `polos`
+- `students`
+- `invoices`
+- `payment_links`
+- `accountability`
+- `activity_logs`
+- `settings`
 
-```txt
-Perfil: Suporte
-Chave: valor definido em SUPPORT_MASTER_KEY
-```
+## Ajustes desta versão
 
-## Criar coordenadores
+- Cadastro manual cria cliente diretamente no Asaas.
+- Atualizar por Polo consulta clientes no Asaas pelo campo `complement`.
+- Permite aplicar um novo complemento em toda a coluna.
+- Botão **Atualizar cadastro no Asaas** envia a alteração em lote para o Asaas.
+- Cadastro em lote aceita CSV no formato: `nome,cpf,complemento`.
+- API do Asaas fica protegida nas Pages Functions, sem expor a chave no navegador.
+- Mantida compatibilidade com o painel antigo baseado em `/login.html` e com o app novo em `/app`.
 
-No painel do Suporte:
+## Login do suporte
 
-1. Vá em **Coordenadores**
-2. Clique em **Novo coordenador**
-3. Informe nome, polo, chave e data de expiração
-4. O coordenador entra pelo perfil **Coordenador** usando a chave criada
+Use o valor cadastrado em `SUPPORT_MASTER_KEY`.
 
-## Asaas
-
-A chave da API Asaas fica apenas no backend do Cloudflare Functions. Ela não aparece no navegador.
-
-Endpoints internos usados pelo frontend:
-
-```txt
-/api/asaas/customers
-/api/asaas/invoices
-/api/asaas/links
-/api/asaas/sync
-```
-
-## Observação técnica
-
-O banco D1 é inicializado automaticamente pelo endpoint:
-
-```txt
-/api/system/init
-```
-
-Também há um arquivo `schema.sql` para criar as tabelas manualmente pelo painel D1, se preferir.
-
-## Instalar no celular
-
-### Android / Chrome
-Abra o site, toque nos três pontinhos e escolha **Adicionar à tela inicial**.
-
-### iPhone / Safari
-Abra o site, toque em compartilhar e escolha **Adicionar à Tela de Início**.
-
-## Atualização Asaas — cadastro e atualização por Polo
-
-Esta versão ajusta os módulos pedidos:
-
-- **Cadastro manual** cria cliente diretamente no Asaas usando `POST /customers` com `name`, `cpfCnpj` e `complement`.
-- **Atualizar por Polo** consulta clientes no Asaas cujo campo `complement` corresponde ao nome do polo informado, exibe nome/CPF/complemento e permite aplicar um novo complemento em lote.
-- **Cadastro em lote** aceita CSV no formato `nome,cpf,complemento` ou `nome;cpf;complemento`, cadastrando os clientes diretamente no Asaas.
-- A chave `ASAAS_API_KEY` continua protegida nas variáveis do Cloudflare Pages; ela nunca é exposta no navegador.
-
-Observação: a API do Asaas não possui um filtro direto universal por `complement`; por isso a Function busca clientes paginados e filtra o campo `complement` no backend. Para contas com muitos clientes, use nomes de polos padronizados para facilitar a busca.
-
-
-## Correção importante para Cloudflare Pages
-
-Nesta versão, o arquivo `wrangler.toml` foi removido para que os bindings sejam configurados diretamente pelo painel do Cloudflare Pages. Depois de subir este ZIP no GitHub, entre em **Settings > Bindings** e adicione `CEEB_KV` e `CEEB_DB`.
-
-- Settings > Bindings > KV namespace: `CEEB_KV`
-- Settings > Bindings > D1 database: `CEEB_DB`
-
-O arquivo `wrangler.toml` **não contém IDs de KV/D1**, porque IDs fictícios fazem o deploy falhar com erro `Invalid KV namespace ID`.
