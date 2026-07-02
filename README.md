@@ -41,3 +41,12 @@ Acesse `/login`, escolha **Suporte** e digite o valor de `SUPPORT_MASTER_KEY`.
 ## Observação
 
 Este projeto não usa Supabase e não expõe a chave do Asaas no navegador. Toda chamada ao Asaas passa pelas Cloudflare Pages Functions.
+
+## Correção de redirecionamento
+Esta versão remove o arquivo `public/_redirects` para evitar loop de redirecionamento no Cloudflare Pages.
+As rotas principais agora existem como pastas com `index.html`:
+- `/login/`
+- `/dashboard/`
+- `/clientes/manual/`
+- `/clientes/polo/`
+- `/clientes/lote/`
