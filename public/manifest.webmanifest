@@ -1,10 +1,1 @@
-{
-  "name": "Gestão de Polo - CEEB",
-  "short_name": "CEEB Polo",
-  "start_url": "/login",
-  "display": "standalone",
-  "background_color": "#f1fff7",
-  "theme_color": "#0b8f43",
-  "description": "Sistema web para gestão de polo CEEB.",
-  "icons": [{"src":"/assets/logo-ceeb.jpg","sizes":"512x512","type":"image/jpeg","purpose":"any maskable"}]
-}
+{"name":"Gestão de Polo CEEB","short_name":"CEEB Polo","start_url":"/login","display":"standalone","background_color":"#effdf6","theme_color":"#0b8f43","icons":[{"src":"/assets/logo.svg","sizes":"any","type":"image/svg+xml"}]}

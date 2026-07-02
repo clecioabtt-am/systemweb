@@ -1,0 +1,2 @@
+const f=document.getElementById('manualForm'),msg=document.getElementById('msg');
+f.addEventListener('submit',async e=>{e.preventDefault();msg.textContent='Salvando no Asaas...';msg.className='msg';const o=Object.fromEntries(new FormData(f));try{const j=await api('/api/asaas/customers',{method:'POST',body:JSON.stringify(o)});msg.className='msg ok';msg.textContent=j.mode==='updated'?'Cliente atualizado no Asaas.':'Cliente criado no Asaas.';f.reset()}catch(err){msg.textContent=err.message}});

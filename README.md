@@ -1,54 +1,43 @@
 # Gestão de Polo CEEB — Cloudflare + Asaas
 
-Projeto pronto para GitHub + Cloudflare Pages.
+Projeto novo compatível com Cloudflare Pages, D1, KV e API Asaas.
 
-## Configuração no Cloudflare Pages
+## Configuração Cloudflare Pages
 
-- Framework preset: **None**
 - Build command: deixe vazio
-- Build output directory: **public**
-
-## Variáveis obrigatórias
-
-Em **Settings → Variables and secrets**:
-
-- `ASAAS_API_KEY` = sua chave do Asaas
-- `ASAAS_ENV` = `production` ou `sandbox`
-- `SUPPORT_MASTER_KEY` = chave de acesso do suporte
+- Build output directory: `public`
 
 ## Bindings obrigatórios
 
-Em **Settings → Bindings**:
+Em **Settings > Bindings**, crie:
 
 - KV namespace: `CEEB_KV`
-- D1 database: `CEEB_DB` apontando para o banco `ceeb_db`
+- D1 database: `CEEB_DB` apontando para `ceeb_db`
+
+## Variáveis obrigatórias
+
+Em **Settings > Variables and secrets**, crie:
+
+- `SUPPORT_MASTER_KEY` — chave de acesso do suporte
+- `ASAAS_API_KEY` — chave da API Asaas
+- `ASAAS_ENV` — `production` ou `sandbox`
 
 ## Banco D1
 
 Execute o arquivo `schema.sql` no console do D1 usando **Run all in sequence**.
 
-Tabelas criadas:
+## Primeiro acesso
 
-- `users`
-- `polos`
-- `students`
-- `invoices`
-- `payment_links`
-- `accountability`
-- `activity_logs`
-- `settings`
+Acesse `/login`, escolha **Suporte** e digite o valor de `SUPPORT_MASTER_KEY`.
 
-## Ajustes desta versão
+## Rotas principais
 
-- Cadastro manual cria cliente diretamente no Asaas.
-- Atualizar por Polo consulta clientes no Asaas pelo campo `complement`.
-- Permite aplicar um novo complemento em toda a coluna.
-- Botão **Atualizar cadastro no Asaas** envia a alteração em lote para o Asaas.
-- Cadastro em lote aceita CSV no formato: `nome,cpf,complemento`.
-- API do Asaas fica protegida nas Pages Functions, sem expor a chave no navegador.
-- Mantida compatibilidade com o painel antigo baseado em `/login.html` e com o app novo em `/app`.
+- `/login`
+- `/dashboard`
+- `/clientes/manual`
+- `/clientes/polo`
+- `/clientes/lote`
 
-## Login do suporte
+## Observação
 
-Use o valor cadastrado em `SUPPORT_MASTER_KEY`.
-
+Este projeto não usa Supabase e não expõe a chave do Asaas no navegador. Toda chamada ao Asaas passa pelas Cloudflare Pages Functions.

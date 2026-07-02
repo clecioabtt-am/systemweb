@@ -1,13 +1,13 @@
 {
   "name": "gestao-polo-ceeb-cloudflare",
-  "version": "3.0.0",
+  "version": "3.1.0",
   "private": true,
-  "description": "Sistema web Gestão de Polo CEEB para Cloudflare Pages + D1 + KV + Asaas",
+  "description": "Sistema Gestão de Polo CEEB para Cloudflare Pages, D1, KV e Asaas",
   "scripts": {
-    "dev": "wrangler pages dev public --d1=CEEB_DB --kv=CEEB_KV",
-    "deploy": "wrangler pages deploy public",
-    "db:schema": "wrangler d1 execute ceeb_db --file=./schema.sql",
-    "db:local": "wrangler d1 execute ceeb_db --local --file=./schema.sql"
+    "dev": "npx wrangler pages dev public --d1=CEEB_DB --kv=CEEB_KV",
+    "deploy": "npx wrangler pages deploy public"
   },
-  "devDependencies": {"wrangler": "latest"}
+  "devDependencies": {
+    "wrangler": "latest"
+  }
 }
