@@ -72,7 +72,8 @@ document.getElementById('loadBtn').onclick = async () => {
     customers = j.data || [];
     render();
     msg.className = 'msg ok';
-    msg.textContent = `${customers.length} cliente(s) carregado(s) do Polo ${polo}.`;
+    msg.textContent = `${customers.length} cliente(s) vinculado(s) ao Polo ${polo}.`;
+    if (j.scanned) msg.textContent += ` ${j.scanned} cliente(s) verificado(s) no Asaas.`;
   } catch (e) {
     msg.className = 'msg';
     msg.textContent = e.message;
