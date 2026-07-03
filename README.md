@@ -75,3 +75,15 @@ Configurações esperadas no Cloudflare Pages:
 - `SUPPORT_MASTER_KEY`
 - Binding KV: `CEEB_KV`
 - Binding D1: `CEEB_DB`
+
+## Atualização: seleção de Polo pelo Asaas
+
+A tela `/clientes/polo/` agora carrega automaticamente os Polos existentes no Asaas a partir do campo `complement` dos clientes.
+
+Nova rota criada:
+
+```txt
+GET /api/asaas/polos
+```
+
+Ela busca clientes no Asaas, agrupa os valores únicos do campo `complement` e mostra a quantidade de clientes por Polo. A lista usa cache no `CEEB_KV` por 10 minutos. Para atualizar manualmente a lista, use o botão **Atualizar lista de Polos** na tela.
