@@ -87,3 +87,9 @@ GET /api/asaas/polos
 ```
 
 Ela busca clientes no Asaas, agrupa os valores únicos do campo `complement` e mostra a quantidade de clientes por Polo. A lista usa cache no `CEEB_KV` por 10 minutos. Para atualizar manualmente a lista, use o botão **Atualizar lista de Polos** na tela.
+
+## Atualização - Baixar lista de alunos
+- Menu "Buscar clientes por Polo" alterado para "Baixar lista de alunos".
+- Nova rota: `/clientes/lista/`.
+- Seleciona Polo existente no Asaas, carrega apenas clientes cujo `complement` é exatamente igual ao Polo selecionado e exibe em ordem alfabética.
+- Exporta lista em PDF ou XLSX pela rota `/api/reports/students-by-polo`.
