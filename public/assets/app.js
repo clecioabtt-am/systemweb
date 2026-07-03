@@ -1,3 +1,12 @@
 async function api(path,opts={}){const r=await fetch(path,{credentials:'same-origin',...opts,headers:{'content-type':'application/json',...(opts.headers||{})}});const j=await r.json().catch(()=>({ok:false,error:'Resposta inválida'}));if(!r.ok||j.ok===false)throw new Error(j.error||'Erro na requisição');return j}
 document.getElementById('logout')?.addEventListener('click',async e=>{e.preventDefault();await fetch('/api/auth/logout',{method:'POST'});location.href='/login/'});
 (async()=>{if(!document.getElementById('statusText'))return;try{const j=await api('/api/system/status');document.getElementById('statusText').textContent=`Login ativo: ${j.user?.name||'Usuário'}`;document.getElementById('d1').textContent=j.d1?'OK':'FALHA';document.getElementById('kv').textContent=j.kv?'OK':'FALHA';document.getElementById('asaas').textContent=j.asaas?'OK':'FALHA';document.getElementById('tables').textContent=(j.tables||[]).length}catch(e){location.href='/login/'}})();
+function escapeHtml(v=''){return String(v).replace(/[&<>'"]/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[ch]))}
+function formatMoney(v){return Number(v||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'})}
+async function loadRecentInvoices(){
+  const box=document.getElementById('recentInvoices'); const msg=document.getElementById('recentMsg'); if(!box)return;
+  try{const j=await api('/api/invoices/recent'); const rows=j.data||[]; if(!rows.length){box.innerHTML=''; if(msg)msg.textContent='Nenhum link gerado ainda.'; return;} if(msg)msg.textContent=`${rows.length} fatura(s) recente(s).`; box.innerHTML=rows.map(r=>`<div class="link-item"><strong>${escapeHtml(r.name||'Cliente')}</strong><a href="${escapeHtml(r.url||'#')}" target="_blank" rel="noopener">${escapeHtml(r.url||'Sem link')}</a><small>${formatMoney(r.value||0)} • ${escapeHtml(r.dueDate||'')}</small></div>`).join('');}catch(e){if(msg)msg.textContent=e.message;}
+}
+document.getElementById('copyRecent')?.addEventListener('click',async()=>{const text=[...document.querySelectorAll('#recentInvoices .link-item')].map(el=>`${el.querySelector('strong')?.textContent||''} - ${el.querySelector('a')?.textContent||''}`).join('\n'); if(!text)return alert('Nenhum link para copiar.'); await navigator.clipboard.writeText(text); alert('Nomes e links copiados.');});
+document.getElementById('clearRecent')?.addEventListener('click',async()=>{await api('/api/invoices/recent',{method:'DELETE'}); await loadRecentInvoices();});
+if(document.getElementById('recentInvoices')) loadRecentInvoices();

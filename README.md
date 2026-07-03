@@ -93,3 +93,12 @@ Ela busca clientes no Asaas, agrupa os valores únicos do campo `complement` e m
 - Nova rota: `/clientes/lista/`.
 - Seleciona Polo existente no Asaas, carrega apenas clientes cujo `complement` é exatamente igual ao Polo selecionado e exibe em ordem alfabética.
 - Exporta lista em PDF ou XLSX pela rota `/api/reports/students-by-polo`.
+
+## Atualização: emissão de faturas
+
+Foram adicionadas as telas:
+
+- `/faturas/manual/` — emissão individual de fatura no Asaas.
+- `/faturas/polo/` — emissão em lote por Polo, buscando clientes pelo campo `complement` do Asaas.
+
+No Dashboard foi adicionada a área **Links de faturas geradas**, com botões para copiar `nome + link` e limpar a lista recente.
