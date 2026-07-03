@@ -1,3 +1,30 @@
+
+async function ensureUsers(env) {
+  if (!env.CEEB_DB) throw Object.assign(new Error('Binding CEEB_DB não encontrado.'), { status: 500 });
+  await env.CEEB_DB.prepare(`CREATE TABLE IF NOT EXISTS users (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL,
+    role TEXT NOT NULL DEFAULT 'support',
+    access_key TEXT,
+    active INTEGER NOT NULL DEFAULT 1,
+    expires_at TEXT,
+    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+  )`).run();
+  const info = await env.CEEB_DB.prepare('PRAGMA table_info(users)').all();
+  const cols = new Set((info.results || []).map(c => c.name));
+  const alters = [];
+  if (!cols.has('role')) alters.push("ALTER TABLE users ADD COLUMN role TEXT NOT NULL DEFAULT 'coordinator'");
+  if (!cols.has('access_key')) alters.push('ALTER TABLE users ADD COLUMN access_key TEXT');
+  if (!cols.has('active')) alters.push('ALTER TABLE users ADD COLUMN active INTEGER NOT NULL DEFAULT 1');
+  if (!cols.has('expires_at')) alters.push('ALTER TABLE users ADD COLUMN expires_at TEXT');
+  if (!cols.has('created_at')) alters.push('ALTER TABLE users ADD COLUMN created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP');
+  if (!cols.has('updated_at')) alters.push('ALTER TABLE users ADD COLUMN updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP');
+  for (const sql of alters) await env.CEEB_DB.prepare(sql).run().catch(() => null);
+  await env.CEEB_DB.prepare('CREATE INDEX IF NOT EXISTS idx_users_role ON users(role)').run().catch(() => null);
+  await env.CEEB_DB.prepare('CREATE INDEX IF NOT EXISTS idx_users_access_key ON users(access_key)').run().catch(() => null);
+}
+
 export async function onRequestPost({ request, env }) {
   try {
     const body = await request.json().catch(() => ({}));
@@ -12,10 +39,12 @@ export async function onRequestPost({ request, env }) {
       if (accessKey !== env.SUPPORT_MASTER_KEY) return json({ ok: false, error: 'Chave de suporte inválida.' }, 401);
       user = { id: 1, name: 'Suporte', role: 'support' };
       if (env.CEEB_DB) {
+        await ensureUsers(env);
         await env.CEEB_DB.prepare("INSERT OR IGNORE INTO users (id, name, role, access_key, active) VALUES (1, 'Suporte', 'support', ?, 1)").bind(accessKey).run().catch(() => null);
       }
     } else {
       if (!env.CEEB_DB) return json({ ok: false, error: 'Binding CEEB_DB não encontrado.' }, 500);
+      await ensureUsers(env);
       const row = await env.CEEB_DB.prepare('SELECT id, name, role, active, expires_at FROM users WHERE access_key = ? LIMIT 1').bind(accessKey).first();
       if (!row) return json({ ok: false, error: 'Chave de coordenador inválida.' }, 401);
       if (!row.active) return json({ ok: false, error: 'Acesso bloqueado pelo suporte.' }, 403);

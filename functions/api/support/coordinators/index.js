@@ -11,19 +11,33 @@ function statusOf(row) {
   if (row.expires_at && String(row.expires_at).slice(0,10) <= soon) return 'vence_em_breve';
   return 'ativo';
 }
+
 async function ensureUsers(env) {
   if (!env.CEEB_DB) throw Object.assign(new Error('Binding CEEB_DB não encontrado.'), { status: 500 });
   await env.CEEB_DB.prepare(`CREATE TABLE IF NOT EXISTS users (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     name TEXT NOT NULL,
     role TEXT NOT NULL DEFAULT 'support',
-    access_key TEXT UNIQUE,
+    access_key TEXT,
     active INTEGER NOT NULL DEFAULT 1,
     expires_at TEXT,
     created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
   )`).run();
+  const info = await env.CEEB_DB.prepare('PRAGMA table_info(users)').all();
+  const cols = new Set((info.results || []).map(c => c.name));
+  const alters = [];
+  if (!cols.has('role')) alters.push("ALTER TABLE users ADD COLUMN role TEXT NOT NULL DEFAULT 'coordinator'");
+  if (!cols.has('access_key')) alters.push('ALTER TABLE users ADD COLUMN access_key TEXT');
+  if (!cols.has('active')) alters.push('ALTER TABLE users ADD COLUMN active INTEGER NOT NULL DEFAULT 1');
+  if (!cols.has('expires_at')) alters.push('ALTER TABLE users ADD COLUMN expires_at TEXT');
+  if (!cols.has('created_at')) alters.push('ALTER TABLE users ADD COLUMN created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP');
+  if (!cols.has('updated_at')) alters.push('ALTER TABLE users ADD COLUMN updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP');
+  for (const sql of alters) await env.CEEB_DB.prepare(sql).run().catch(() => null);
+  await env.CEEB_DB.prepare('CREATE INDEX IF NOT EXISTS idx_users_role ON users(role)').run().catch(() => null);
+  await env.CEEB_DB.prepare('CREATE INDEX IF NOT EXISTS idx_users_access_key ON users(access_key)').run().catch(() => null);
 }
+
 async function log(env, data, action, target, request, metadata = {}) {
   if (!env.CEEB_DB) return;
   const ip = request.headers.get('CF-Connecting-IP') || '';
