@@ -114,3 +114,20 @@ Esta versão otimiza a geração do relatório de prestação de contas:
 - cruza os pagamentos com os clientes do Polo em cache;
 - mantém cache em KV por 10 minutos para o mesmo Polo/período;
 - cacheia a lista geral de clientes por 15 minutos para reduzir chamadas ao Asaas.
+
+## Atualização: Gerenciamento de coordenadores
+
+Incluído o menu **Suporte → Gerenciar coordenadores** para usuários com perfil de suporte.
+
+O suporte pode:
+- criar login de coordenador informando apenas nome, senha/chave de acesso e data de expiração;
+- editar nome, chave, status e data de expiração;
+- bloquear/desbloquear acesso;
+- remover coordenador;
+- renovar o acesso alterando a data de expiração, mantendo a mesma senha/chave.
+
+O coordenador faz login escolhendo o perfil **Coordenador** e usando a senha/chave cadastrada pelo suporte.
+
+## Atualização: PDF Prestação de Contas
+
+O relatório PDF de prestação de contas agora usa a logo da escola no cabeçalho no lugar do texto CEEB.

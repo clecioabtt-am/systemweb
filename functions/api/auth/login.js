@@ -19,7 +19,7 @@ export async function onRequestPost({ request, env }) {
       const row = await env.CEEB_DB.prepare('SELECT id, name, role, active, expires_at FROM users WHERE access_key = ? LIMIT 1').bind(accessKey).first();
       if (!row) return json({ ok: false, error: 'Chave de coordenador inválida.' }, 401);
       if (!row.active) return json({ ok: false, error: 'Acesso bloqueado pelo suporte.' }, 403);
-      if (row.expires_at && new Date(row.expires_at).getTime() < Date.now()) return json({ ok: false, error: 'Chave expirada.' }, 403);
+      if (row.expires_at && String(row.expires_at).slice(0,10) < new Date().toISOString().slice(0,10)) return json({ ok: false, error: 'Chave expirada. Solicite ao suporte uma nova data de expiração.' }, 403);
       user = { id: row.id, name: row.name, role: row.role };
     }
 
