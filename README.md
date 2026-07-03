@@ -106,3 +106,11 @@ No Dashboard foi adicionada a área **Links de faturas geradas**, com botões pa
 
 ## Prestação de Contas
 Inclui relatório por Polo com período de pagamento, quantidade de faturas pagas, soma do valor líquido, exportação XLSX e PDF horizontal com logo da escola.
+
+## Otimização de prestação de contas
+
+Esta versão otimiza a geração do relatório de prestação de contas:
+- busca pagamentos diretamente por período (`paymentDate[ge]` e `paymentDate[le]`);
+- cruza os pagamentos com os clientes do Polo em cache;
+- mantém cache em KV por 10 minutos para o mesmo Polo/período;
+- cacheia a lista geral de clientes por 15 minutos para reduzir chamadas ao Asaas.
