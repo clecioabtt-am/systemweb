@@ -50,3 +50,28 @@ As rotas principais agora existem como pastas com `index.html`:
 - `/clientes/manual/`
 - `/clientes/polo/`
 - `/clientes/lote/`
+
+
+## Correção aplicada — Asaas User-Agent
+
+Esta versão inclui o cabeçalho obrigatório `User-Agent` em todas as requisições para a API do Asaas.
+
+Após publicar no Cloudflare, teste:
+
+```txt
+/api/asaas/ping
+```
+
+Se a configuração estiver correta, a resposta será:
+
+```json
+{"ok":true,"message":"Conexão com Asaas funcionando."}
+```
+
+Configurações esperadas no Cloudflare Pages:
+
+- `ASAAS_API_KEY` — Secret, sem aspas.
+- `ASAAS_ENV` — `production` ou `sandbox`.
+- `SUPPORT_MASTER_KEY`
+- Binding KV: `CEEB_KV`
+- Binding D1: `CEEB_DB`
