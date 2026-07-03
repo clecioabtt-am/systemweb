@@ -102,3 +102,7 @@ Foram adicionadas as telas:
 - `/faturas/polo/` — emissão em lote por Polo, buscando clientes pelo campo `complement` do Asaas.
 
 No Dashboard foi adicionada a área **Links de faturas geradas**, com botões para copiar `nome + link` e limpar a lista recente.
+
+
+## Prestação de Contas
+Inclui relatório por Polo com período de pagamento, quantidade de faturas pagas, soma do valor líquido, exportação XLSX e PDF horizontal com logo da escola.
