@@ -5,8 +5,11 @@ function getComplement(c={}){return String(c.complement||c.addressComplement||c.
 function brDate(v=''){ if(!v) return ''; const [y,m,d]=String(v).slice(0,10).split('-'); return y&&m&&d?`${d}/${m}/${y}`:v; }
 function billingLabel(v=''){const m={BOLETO:'Boleto Bancário / Pix',PIX:'PIX',UNDEFINED:'Boleto Bancário / Pix',CREDIT_CARD:'Cartão'}; return m[String(v).toUpperCase()]||v||''}
 function paymentUrl(p={}){return p.invoiceUrl||p.bankSlipUrl||p.transactionReceiptUrl||p.paymentLink||''}
+export function isPaidStatus(s=''){return ['RECEIVED','CONFIRMED','RECEIVED_IN_CASH'].includes(String(s||'').toUpperCase())}
+export function isoInRange(date,start,end){const d=String(date||'').slice(0,10); return !!(d && (!start || d>=start) && (!end || d<=end));}
 function mapInvoice(customer,p){
   const status=String(p.status||'').toUpperCase();
+  const payDate=p.paymentDate||p.clientPaymentDate||p.confirmedDate||'';
   return {
     id:p.id,
     customerId:customer.id,
@@ -17,8 +20,8 @@ function mapInvoice(customer,p){
     billingTypeLabel:billingLabel(p.billingType),
     dueDate:p.dueDate||'',
     dueDateBr:brDate(p.dueDate),
-    paymentDate:p.paymentDate||p.clientPaymentDate||'',
-    paymentDateBr:brDate(p.paymentDate||p.clientPaymentDate||''),
+    paymentDate:payDate,
+    paymentDateBr:brDate(payDate),
     value:p.value||0,
     netValue:p.netValue ?? p.value ?? 0,
     status,
@@ -55,20 +58,40 @@ async function customersByClient(env,name,cpf){
   arr.sort((a,b)=>String(a.name||'').localeCompare(String(b.name||''),'pt-BR',{sensitivity:'base'}));
   return arr;
 }
-async function invoicesForCustomer(env,customer){
+async function invoicesForCustomer(env,customer,opts={}){
   const out=[]; let offset=0; const limit=100;
   for(let i=0;i<20;i++){
     const page=await asaasFetch(env,`/payments?customer=${encodeURIComponent(customer.id)}&limit=${limit}&offset=${offset}`);
-    const rows=page.data||[]; out.push(...rows.map(p=>mapInvoice(customer,p)));
+    const rows=(page.data||[]).map(p=>mapInvoice(customer,p));
+    for(const row of rows){
+      if(opts.onlyPaid && !isPaidStatus(row.status)) continue;
+      if(opts.paymentStart || opts.paymentEnd){
+        if(!isoInRange(row.paymentDate,opts.paymentStart,opts.paymentEnd)) continue;
+      }
+      out.push(row);
+    }
     if(!page.hasMore||!rows.length)break; offset+=limit;
   }
   return out;
 }
-export async function fetchInvoiceRows(env,{mode,polo,name,cpf}){
+async function mapConcurrent(items,limit,fn){
+  const results=new Array(items.length);
+  let idx=0;
+  async function worker(){
+    while(idx<items.length){
+      const current=idx++;
+      results[current]=await fn(items[current],current);
+    }
+  }
+  const workers=Array.from({length:Math.min(limit,items.length)},()=>worker());
+  await Promise.all(workers);
+  return results;
+}
+export async function fetchInvoiceRows(env,{mode,polo,name,cpf,onlyPaid=false,paymentStart='',paymentEnd='',concurrency=8}){
   const customers = mode==='polo' ? await customersByPolo(env,polo) : await customersByClient(env,name,cpf);
-  const all=[];
-  for(const c of customers) all.push(...await invoicesForCustomer(env,c));
-  all.sort((a,b)=>(a.name||'').localeCompare(b.name||'','pt-BR',{sensitivity:'base'}) || String(b.dueDate||'').localeCompare(String(a.dueDate||'')));
+  const chunks=await mapConcurrent(customers,concurrency,(c)=>invoicesForCustomer(env,c,{onlyPaid,paymentStart,paymentEnd}));
+  const all=chunks.flat();
+  all.sort((a,b)=>(a.name||'').localeCompare(b.name||'','pt-BR',{sensitivity:'base'}) || String(a.paymentDate||a.dueDate||'').localeCompare(String(b.paymentDate||b.dueDate||'')));
   return all;
 }
 export async function onRequestGet({request,env}){
