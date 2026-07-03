@@ -1,4 +1,5 @@
 import { asaasFetch, onlyDigits, json, log } from './_utils.js';
+import { upsertStudentFromAsaas } from './db-utils.js';
 
 export async function onRequestGet({ request, env, data }) {
   try {
@@ -47,12 +48,7 @@ export async function onRequestPost({ request, env, data }) {
       ? await asaasFetch(env, `/customers/${existing.id}`, { method: 'POST', body: JSON.stringify(payload) })
       : await asaasFetch(env, '/customers', { method: 'POST', body: JSON.stringify(payload) });
 
-    if (env.CEEB_DB) {
-      await env.CEEB_DB.prepare(`INSERT INTO students (asaas_id, name, cpf, email, phone, complement, updated_at)
-        VALUES (?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
-        ON CONFLICT(asaas_id) DO UPDATE SET name=excluded.name, cpf=excluded.cpf, email=excluded.email, phone=excluded.phone, complement=excluded.complement, updated_at=CURRENT_TIMESTAMP`)
-        .bind(customer.id, customer.name || name, cpfCnpj, customer.email || body.email || '', customer.phone || body.phone || '', customer.complement || complement || '').run();
-    }
+    await upsertStudentFromAsaas(env, customer, { name, cpfCnpj, email: body.email || '', phone: body.phone || '', complement });
     await log(env, data.user, existing ? 'asaas.customer.update' : 'asaas.customer.create', customer.id, { cpfCnpj, complement }, request);
     return json({ ok: true, mode: existing ? 'updated' : 'created', customer });
   } catch (err) {
