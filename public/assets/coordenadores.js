@@ -37,7 +37,7 @@ async function load(){
   try{
     msg.className='msg';
     msg.textContent='Carregando coordenadores...';
-    const j=await api('/api/support/coordinators');
+    const j=await api('/api/support/coordinators/');
     coordinators=j.data||[];
     document.getElementById('sumTotal').textContent=j.summary?.total??coordinators.length;
     document.getElementById('sumActive').textContent=j.summary?.ativos??coordinators.filter(c=>c.status==='ativo'||c.status==='vence_em_breve').length;
@@ -67,10 +67,10 @@ form?.addEventListener('submit',async ev=>{
     msg.className='msg';
     msg.textContent='Salvando...';
     if(id){
-      await api('/api/support/coordinators',{method:'PATCH',body:JSON.stringify(payload)});
+      await api('/api/support/coordinators/',{method:'PATCH',body:JSON.stringify(payload)});
     }else{
       if(!accessKey) throw new Error('Informe a chave de acesso do coordenador.');
-      await api('/api/support/coordinators',{method:'POST',body:JSON.stringify(payload)});
+      await api('/api/support/coordinators/',{method:'POST',body:JSON.stringify(payload)});
     }
     resetForm();
     await load();
@@ -111,7 +111,7 @@ tbody?.addEventListener('click',async ev=>{
     if(b.dataset.toggle){
       msg.className='msg';
       msg.textContent=c.active?'Bloqueando coordenador...':'Desbloqueando coordenador...';
-      await api('/api/support/coordinators',{method:'PATCH',body:JSON.stringify({id,active:b.dataset.active==='1'})});
+      await api('/api/support/coordinators/',{method:'PATCH',body:JSON.stringify({id,active:b.dataset.active==='1'})});
       await load();
       return;
     }
@@ -120,7 +120,7 @@ tbody?.addEventListener('click',async ev=>{
       if(!confirm(`Deseja realmente remover o coordenador ${c.name}? Esta ação não pode ser desfeita.`))return;
       msg.className='msg';
       msg.textContent='Removendo coordenador...';
-      await api('/api/support/coordinators?id='+encodeURIComponent(id),{method:'DELETE'});
+      await api('/api/support/coordinators/?id='+encodeURIComponent(id),{method:'DELETE'});
       if(form.elements.id.value===String(id)) resetForm();
       await load();
       msg.className='msg ok';
