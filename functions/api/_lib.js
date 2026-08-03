@@ -27,7 +27,15 @@ export async function log(env, user, action, entity='', entity_id='', meta={}){ 
 export async function makeSession(env,user){ const token=crypto.randomUUID()+crypto.randomUUID(); await env.CEEB_KV.put('sess:'+token, JSON.stringify({id:user.id,role:user.role,name:user.name,polo_id:user.polo_id||null}), {expirationTtl: 60*60*12}); return token; }
 export async function requireUser(req, env){
   const auth=req.headers.get('authorization')||'';
-  const token=auth.replace(/^Bearer\s+/i,'');
+  let token=auth.replace(/^Bearer\s+/i,'').trim();
+
+  // O painel atual autentica por cookie HttpOnly (ceeb_session).
+  // Mantém também compatibilidade com clientes antigos que usam Bearer token.
+  if(!token){
+    const cookie=req.headers.get('cookie')||'';
+    const match=cookie.match(/(?:^|;\s*)ceeb_session=([^;]+)/);
+    if(match) token=decodeURIComponent(match[1]);
+  }
   if(!token) return null;
 
   // Compatibilidade com as duas versões do projeto:
