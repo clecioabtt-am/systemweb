@@ -95,3 +95,90 @@ export async function onRequestPost({ request, env, data }) {
     return json({ ok: true, id: r.meta?.last_row_id || null });
   } catch (err) { return json({ ok: false, error: err.message }, err.status || 500); }
 }
+
+
+export async function onRequestPatch({ request, env, data }) {
+  try {
+    if (!isSupport(data)) return json({ ok: false, error: 'Acesso restrito ao suporte.' }, 403);
+    await ensureUsers(env);
+    const cols = await userColumns(env);
+    const body = await request.json().catch(() => ({}));
+    const id = String(body.id ?? '').trim();
+    if (!id || id === '1') return json({ ok: false, error: 'Coordenador inválido.' }, 400);
+
+    const current = await env.CEEB_DB.prepare("SELECT id, name FROM users WHERE CAST(id AS TEXT) = ? AND role = 'coordinator' LIMIT 1").bind(id).first();
+    if (!current) return json({ ok: false, error: 'Coordenador não encontrado.' }, 404);
+
+    const fields = [];
+    const binds = [];
+
+    if (body.name !== undefined) {
+      const v = String(body.name || '').trim();
+      if (!v) return json({ ok: false, error: 'Informe o nome do coordenador.' }, 400);
+      fields.push('name = ?'); binds.push(v);
+    }
+
+    // A chave só é alterada quando uma NOVA chave é enviada explicitamente.
+    // Assim, renovar apenas a validade nunca tenta cadastrar novamente a chave antiga.
+    if (body.accessKey !== undefined && String(body.accessKey || '').trim() !== '') {
+      const v = String(body.accessKey).trim();
+      const h = await hashKey(v);
+      let existing = null;
+      if (cols.has('access_key_hash')) {
+        existing = await env.CEEB_DB.prepare('SELECT id FROM users WHERE access_key_hash = ? AND CAST(id AS TEXT) <> ? LIMIT 1').bind(h, id).first();
+      }
+      if (!existing && cols.has('access_key')) {
+        existing = await env.CEEB_DB.prepare('SELECT id FROM users WHERE access_key = ? AND CAST(id AS TEXT) <> ? LIMIT 1').bind(v, id).first();
+      }
+      if (existing) return json({ ok: false, error: 'Essa senha/chave já está em uso por outro usuário.' }, 409);
+      if (cols.has('access_key')) { fields.push('access_key = ?'); binds.push(v); }
+      if (cols.has('access_key_hash')) { fields.push('access_key_hash = ?'); binds.push(h); }
+    }
+
+    if (body.expires_at !== undefined || body.expiresAt !== undefined) {
+      const v = body.expires_at ?? body.expiresAt;
+      fields.push('expires_at = ?'); binds.push(String(v || '').trim() || null);
+    }
+    if (body.active !== undefined) {
+      fields.push('active = ?'); binds.push(body.active ? 1 : 0);
+    }
+
+    if (!fields.length) return json({ ok: false, error: 'Nenhuma alteração enviada.' }, 400);
+    if (cols.has('updated_at')) fields.push('updated_at = CURRENT_TIMESTAMP');
+    binds.push(id);
+
+    const result = await env.CEEB_DB.prepare(`UPDATE users SET ${fields.join(', ')} WHERE CAST(id AS TEXT) = ? AND role = 'coordinator'`).bind(...binds).run();
+    if (!(result.meta?.changes || 0)) return json({ ok: false, error: 'Nenhuma alteração foi aplicada.' }, 404);
+
+    await log(env, data, 'coordinator_update', `users:${id}`, request, {
+      name: body.name,
+      expires_at: body.expires_at ?? body.expiresAt,
+      active: body.active,
+      accessKey: body.accessKey ? '[alterada]' : undefined
+    });
+    return json({ ok: true });
+  } catch (err) {
+    return json({ ok: false, error: err.message }, err.status || 500);
+  }
+}
+
+export async function onRequestDelete({ request, env, data }) {
+  try {
+    if (!isSupport(data)) return json({ ok: false, error: 'Acesso restrito ao suporte.' }, 403);
+    await ensureUsers(env);
+    const url = new URL(request.url);
+    const id = String(url.searchParams.get('id') || '').trim();
+    if (!id || id === '1') return json({ ok: false, error: 'Coordenador inválido.' }, 400);
+
+    const current = await env.CEEB_DB.prepare("SELECT id, name FROM users WHERE CAST(id AS TEXT) = ? AND role = 'coordinator' LIMIT 1").bind(id).first();
+    if (!current) return json({ ok: false, error: 'Coordenador não encontrado.' }, 404);
+
+    const result = await env.CEEB_DB.prepare("DELETE FROM users WHERE CAST(id AS TEXT) = ? AND role = 'coordinator'").bind(id).run();
+    if (!(result.meta?.changes || 0)) return json({ ok: false, error: 'O coordenador não foi removido.' }, 500);
+
+    await log(env, data, 'coordinator_delete', `users:${id}`, request, { name: current.name });
+    return json({ ok: true, deleted: result.meta?.changes || 1 });
+  } catch (err) {
+    return json({ ok: false, error: err.message }, err.status || 500);
+  }
+}

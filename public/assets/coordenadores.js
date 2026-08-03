@@ -5,6 +5,8 @@ const tbody = document.getElementById('tbody');
 const search = document.getElementById('search');
 const keyInput = form?.querySelector('[name="accessKey"]');
 const formTitle = form?.closest('.panel')?.querySelector('h2');
+let editingId = '';
+let allowKeyChange = false;
 
 function e(v=''){return String(v??'').replace(/[&<>'"]/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[ch]))}
 function statusText(s){return {ativo:'Ativo',vence_em_breve:'Vence em breve',expirado:'Expirado',bloqueado:'Bloqueado'}[s]||s}
@@ -15,10 +17,17 @@ function render(){const rows=filtered(); tbody.innerHTML=rows.map(c=>`<tr><td><s
 function resetForm(){
   form?.reset();
   if(form?.elements?.id) form.elements.id.value='';
+  editingId='';
+  allowKeyChange=false;
   if(keyInput){
     keyInput.required=true;
+    keyInput.disabled=false;
+    keyInput.value='';
+    keyInput.autocomplete='new-password';
     keyInput.placeholder='Senha que ele usará para entrar';
   }
+  const changeKeyBtn=document.getElementById('changeKeyBtn');
+  if(changeKeyBtn) changeKeyBtn.style.display='none';
   if(formTitle) formTitle.textContent='Novo coordenador';
   document.getElementById('saveBtn').textContent='Salvar coordenador';
   document.getElementById('cancelEdit').style.display='none';
@@ -42,13 +51,15 @@ async function load(){
 form?.addEventListener('submit',async ev=>{
   ev.preventDefault();
   const fd=new FormData(form);
-  const id=String(fd.get('id')||'').trim();
-  const accessKey=String(fd.get('accessKey')||'').trim();
+  const id=String(form.elements.id?.value||editingId||'').trim();
   const payload={
     name:String(fd.get('name')||'').trim(),
     expires_at:String(fd.get('expiresAt')||'').trim()||null,
     active:fd.get('active')==='1'
   };
+  // Durante a edição a chave antiga é preservada. Só enviamos accessKey se
+  // o suporte clicar em "Alterar chave" e digitar uma nova chave.
+  const accessKey=(!id || allowKeyChange) ? String(keyInput?.value||'').trim() : '';
   if(accessKey) payload.accessKey=accessKey;
   if(id) payload.id=id;
 
@@ -77,13 +88,19 @@ tbody?.addEventListener('click',async ev=>{
 
   try{
     if(b.dataset.edit){
+      editingId=String(c.id);
+      allowKeyChange=false;
       form.elements.id.value=c.id;
       form.elements.name.value=c.name||'';
-      form.elements.accessKey.value='';
       form.elements.expiresAt.value=(c.expires_at||'').slice(0,10);
       form.elements.active.value=c.active?'1':'0';
       keyInput.required=false;
-      keyInput.placeholder='Deixe em branco para manter a chave atual';
+      keyInput.value='';
+      keyInput.disabled=true;
+      keyInput.autocomplete='new-password';
+      keyInput.placeholder='Chave atual será mantida';
+      const changeKeyBtn=document.getElementById('changeKeyBtn');
+      if(changeKeyBtn) changeKeyBtn.style.display='inline-flex';
       if(formTitle) formTitle.textContent='Editar coordenador';
       document.getElementById('saveBtn').textContent='Salvar alterações';
       document.getElementById('cancelEdit').style.display='inline-flex';
@@ -110,6 +127,15 @@ tbody?.addEventListener('click',async ev=>{
       msg.textContent='Coordenador removido com sucesso.';
     }
   }catch(err){msg.className='msg';msg.textContent=err.message;}
+});
+
+document.getElementById('changeKeyBtn')?.addEventListener('click',()=>{
+  allowKeyChange=true;
+  keyInput.disabled=false;
+  keyInput.value='';
+  keyInput.required=true;
+  keyInput.placeholder='Digite uma NOVA chave de acesso';
+  keyInput.focus();
 });
 
 document.getElementById('cancelEdit')?.addEventListener('click',resetForm);
