@@ -128,6 +128,16 @@ O suporte pode:
 
 O coordenador faz login escolhendo o perfil **Coordenador** e usando a senha/chave cadastrada pelo suporte.
 
+## Atualização 3.2 — Situação do aluno
+
+- Novo item **Consultas → Situação do aluno** no menu esquerdo.
+- Consulta individual ou em lote por nome completo e CPF diretamente no Asaas.
+- Considera como pagas somente cobranças `RECEIVED`, `CONFIRMED` ou `RECEIVED_IN_CASH`.
+- Exibe quantidade, valor total pago, valor líquido e descrição de cada fatura.
+- Organiza as mensalidades cronologicamente como 1ª, 2ª, 3ª e assim por diante.
+- Exporta o resultado em PDF com a logo do CEEB ou em XLSX.
+- Limite de segurança: até 100 alunos por consulta/exportação.
+
 ## Atualização: PDF Prestação de Contas
 
 O relatório PDF de prestação de contas agora usa a logo da escola no cabeçalho no lugar do texto CEEB.

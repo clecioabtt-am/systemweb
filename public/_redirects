@@ -1,7 +1,13 @@
-/login /login.html 200
-/dashboard /dashboard.html 200
-/clientes/manual /clientes/manual.html 200
-/clientes/polo /clientes/polo.html 200
-/clientes/lote /clientes/lote.html 200
-
-/prestacao-geral /prestacao-geral.html 200
+/login /login/ 301
+/dashboard /dashboard/ 301
+/clientes/manual /clientes/manual/ 301
+/clientes/polo /clientes/polo/ 301
+/clientes/lote /clientes/lote/ 301
+/clientes/lista /clientes/lista/ 301
+/consultas/cliente /consultas/cliente/ 301
+/consultas/polo /consultas/polo/ 301
+/faturas/manual /faturas/manual/ 301
+/faturas/polo /faturas/polo/ 301
+/prestacao /prestacao/ 301
+/prestacao-geral /prestacao-geral/ 301
+/suporte/coordenadores /suporte/coordenadores/ 301

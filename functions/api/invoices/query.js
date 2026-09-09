@@ -61,7 +61,9 @@ async function customersByClient(env,name,cpf){
     found.push(...(r.data||[]));
   }
   const byId=new Map(); found.forEach(c=>byId.set(c.id,c));
-  const arr=[...byId.values()];
+  let arr=[...byId.values()];
+  if(cpfClean) arr=arr.filter(c=>onlyDigits(c.cpfCnpj||'')===cpfClean);
+  if(name){const wanted=normalize(name);const exact=arr.filter(c=>normalize(c.name)===wanted);if(exact.length)arr=exact;}
   arr.sort((a,b)=>String(a.name||'').localeCompare(String(b.name||''),'pt-BR',{sensitivity:'base'}));
   return arr;
 }
@@ -114,7 +116,34 @@ export async function onRequestGet({request,env}){
     const cpf=url.searchParams.get('cpf')||'';
     if(mode==='polo' && !polo) return json({ok:false,error:'Informe o Polo.'},400);
     if(mode!=='polo' && !name && !cpf) return json({ok:false,error:'Informe nome ou CPF.'},400);
-    const data=await fetchInvoiceRows(env,{mode,polo,name,cpf});
-    return json({ok:true,total:data.length,data});
+    const onlyPaid=url.searchParams.get('onlyPaid')==='1';
+    const data=await fetchInvoiceRows(env,{mode,polo,name,cpf,onlyPaid});
+    const paid=data.filter(r=>isPaidStatus(r.status));
+    return json({ok:true,total:data.length,summary:{paidCount:paid.length,totalPaid:paid.reduce((s,r)=>s+Number(r.value||0),0),totalNet:paid.reduce((s,r)=>s+Number(r.netValue??r.value??0),0)},data});
+  }catch(err){return json({ok:false,error:err.message,detail:err.payload||null},err.status||500)}
+}
+
+export async function onRequestPost({request,env}){
+  try{
+    const body=await request.json(); const people=Array.isArray(body.people)?body.people:[];
+    if(!people.length)return json({ok:false,error:'Informe pelo menos um aluno.'},400);
+    if(people.length>100)return json({ok:false,error:'Consulte no máximo 100 alunos por vez.'},400);
+    const reports=[];
+    for(const person of people){
+      const name=String(person.name||person.nome||'').trim(),cpf=onlyDigits(person.cpf||'');
+      if(!name&&!cpf)continue;
+      const rows=await fetchInvoiceRows(env,{mode:'cliente',name,cpf,onlyPaid:true,concurrency:4});
+      const groups=new Map();
+      rows.forEach(row=>{const key=row.customerId||`${row.name}|${row.cpfCnpj}`;if(!groups.has(key))groups.set(key,[]);groups.get(key).push(row)});
+      if(!groups.size){reports.push({query:{name,cpf},name:name||'Aluno não localizado',cpfCnpj:cpf,found:false,paidCount:0,totalPaid:0,totalNet:0,rows:[]});continue;}
+      for(const studentRows of groups.values()){
+        studentRows.sort((a,b)=>String(a.paymentDate||a.dueDate||'').localeCompare(String(b.paymentDate||b.dueDate||'')));
+        studentRows.forEach((r,i)=>r.paymentOrder=i+1);
+        const first=studentRows[0];
+        reports.push({query:{name,cpf},name:first.name,cpfCnpj:first.cpfCnpj,complement:first.complement,found:true,paidCount:studentRows.length,totalPaid:studentRows.reduce((s,r)=>s+Number(r.value||0),0),totalNet:studentRows.reduce((s,r)=>s+Number(r.netValue??r.value??0),0),rows:studentRows});
+      }
+    }
+    reports.sort((a,b)=>a.name.localeCompare(b.name,'pt-BR',{sensitivity:'base'}));
+    return json({ok:true,studentCount:reports.length,paidCount:reports.reduce((s,r)=>s+r.paidCount,0),totalPaid:reports.reduce((s,r)=>s+r.totalPaid,0),totalNet:reports.reduce((s,r)=>s+r.totalNet,0),reports});
   }catch(err){return json({ok:false,error:err.message,detail:err.payload||null},err.status||500)}
 }
