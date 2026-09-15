@@ -141,3 +141,27 @@ O coordenador faz login escolhendo o perfil **Coordenador** e usando a senha/cha
 ## Atualização: PDF Prestação de Contas
 
 O relatório PDF de prestação de contas agora usa a logo da escola no cabeçalho no lugar do texto CEEB.
+
+## Consulta manual por CPF
+
+A opção **Consultas → Consulta manual** localiza o aluno diretamente no Asaas usando somente o CPF e exibe o histórico completo de cobranças, separado em pagas, vencidas e aguardando pagamento. O relatório detalha descrição, valor, vencimento e data de pagamento e pode ser exportado em PDF verde com a logo da escola.
+
+Rotas adicionadas:
+
+- `/consultas/manual/`
+- `GET /api/invoices/manual?cpf=...`
+- `GET /api/reports/manual-student?cpf=...`
+
+Esta atualização não exige alteração no banco D1.
+
+## Enviar pelo site do GitHub
+
+Este pacote foi organizado para ter menos de 100 arquivos, limite aceito pelo envio no navegador do GitHub.
+
+1. Extraia o arquivo ZIP no Windows.
+2. Abra a pasta `systemweb-main` extraída.
+3. No repositório do GitHub, clique em **Add file → Upload files**.
+4. Selecione tudo dentro da pasta `systemweb-main` (`Ctrl + A`) e arraste para a área de upload.
+5. Aguarde os arquivos terminarem de carregar e clique em **Commit changes**.
+
+Não envie o arquivo ZIP diretamente e não arraste a pasta externa `systemweb-main-github`; envie o conteúdo que está dentro de `systemweb-main`.

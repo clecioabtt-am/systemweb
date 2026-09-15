@@ -52,7 +52,7 @@ function statusColor(status){
   if(['OVERDUE','VENCIDA'].includes(s)) return {bg:'1.00 0.92 0.92', fg:'0.78 0.10 0.10'};
   return {bg:'1.00 0.96 0.84', fg:'0.62 0.35 0.00'};
 }
-export function makePdf(rows,title){
+export function makePdf(rows,title,options={}){
   const pageW=842, pageH=595;
   const margin=26;
   const cols=[
@@ -76,7 +76,8 @@ export function makePdf(rows,title){
     lines.push('q 58 0 0 58 30 528 cm /Im1 Do Q');
     lines.push('1 1 1 rg');
     lines.push(`BT /F2 18 Tf 100 560 Td (${pdfEscape(title)}) Tj ET`);
-    lines.push(`BT /F1 9 Tf 100 542 Td (Centro Educacional Emmanuel Butel  |  Total de faturas: ${rows.length}  |  Pagina ${pageNo}) Tj ET`);
+    const headerInfo=options.summaryText||`Centro Educacional Emmanuel Butel  |  Total de faturas: ${rows.length}`;
+    lines.push(`BT /F1 8.5 Tf 100 542 Td (${pdfEscape(headerInfo)}  |  Pagina ${pageNo}) Tj ET`);
     lines.push('0.03 0.56 0.25 rg 26 510 790 3 re f');
     y=490;
     // cabecalho tabela
@@ -99,7 +100,7 @@ export function makePdf(rows,title){
       forma:r.billingTypeLabel||r.billingType||'-',
       venc:r.dueDateBr||r.dueDate||'-',
       pag:r.paymentDateBr||r.paymentDate||'-',
-      valor:money(r.netValue??r.value),
+      valor:money(r.reportValue??r.netValue??r.value),
       status:statusLabel(r.status),
       desc:r.description||'-'
     };

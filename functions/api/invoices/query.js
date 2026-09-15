@@ -52,7 +52,7 @@ async function customersByPolo(env,polo){
   rows.sort((a,b)=>String(a.name||'').localeCompare(String(b.name||''),'pt-BR',{sensitivity:'base'}));
   return rows;
 }
-async function customersByClient(env,name,cpf){
+export async function customersByClient(env,name,cpf){
   const cpfClean=onlyDigits(cpf||'');
   let found=[];
   if(cpfClean){const r=await asaasFetch(env,`/customers?cpfCnpj=${encodeURIComponent(cpfClean)}&limit=100`); found.push(...(r.data||[]));}
@@ -67,7 +67,7 @@ async function customersByClient(env,name,cpf){
   arr.sort((a,b)=>String(a.name||'').localeCompare(String(b.name||''),'pt-BR',{sensitivity:'base'}));
   return arr;
 }
-async function invoicesForCustomer(env,customer,opts={}){
+export async function invoicesForCustomer(env,customer,opts={}){
   const out=[]; let offset=0; const limit=100;
   for(let i=0;i<20;i++){
     const params=new URLSearchParams({customer:customer.id,limit:String(limit),offset:String(offset)});
