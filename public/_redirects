@@ -12,3 +12,18 @@
 /prestacao /prestacao/ 301
 /prestacao-geral /prestacao-geral/ 301
 /suporte/coordenadores /suporte/coordenadores/ 301
+
+# Compatibilidade com enderecos antigos .html
+/dashboard.html /dashboard/ 302
+/prestacao.html /prestacao/ 302
+/login.html /login/ 302
+/prestacao-geral.html /prestacao-geral/ 302
+/clientes/lote.html /clientes/lote/ 302
+/clientes/lista.html /clientes/lista/ 302
+/clientes/polo.html /clientes/polo/ 302
+/clientes/manual.html /clientes/manual/ 302
+/suporte/coordenadores.html /suporte/coordenadores/ 302
+/consultas/cliente.html /consultas/cliente/ 302
+/consultas/polo.html /consultas/polo/ 302
+/faturas/polo.html /faturas/polo/ 302
+/faturas/manual.html /faturas/manual/ 302

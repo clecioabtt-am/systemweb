@@ -26,6 +26,6 @@ document.getElementById('buscarPolo')?.addEventListener('click',buscarPolo);
 document.getElementById('buscarCliente')?.addEventListener('click',buscarCliente);
 document.getElementById('buscarPlanilha')?.addEventListener('click',buscarPlanilha);
 document.getElementById('refreshPolos')?.addEventListener('click',()=>loadPolos(true));
-document.getElementById('exportXlsx')?.addEventListener('click',()=>{const u=exportUrl('xlsx'); if(u) location.href=u;});
-document.getElementById('exportPdf')?.addEventListener('click',()=>{const u=exportUrl('pdf'); if(u) location.href=u;});
+document.getElementById('exportXlsx')?.addEventListener('click',()=>{const u=exportUrl('xlsx'); if(u) ceebDownload(u,`faturas_ceeb.${u.includes('xlsx')?'xlsx':'pdf'}`);});
+document.getElementById('exportPdf')?.addEventListener('click',()=>{const u=exportUrl('pdf'); if(u) ceebDownload(u,`faturas_ceeb.${u.includes('xlsx')?'xlsx':'pdf'}`);});
 if(poloSelect) loadPolos(false);

@@ -77,7 +77,7 @@ async function loadStudents() {
 function download(format) {
   if (!selectedPolo) return;
   const url = `/api/reports/students-by-polo?format=${encodeURIComponent(format)}&complement=${encodeURIComponent(selectedPolo)}`;
-  window.location.href = url;
+  ceebDownload(url,`lista_alunos_ceeb.${format}`,{status:msg});
 }
 
 document.getElementById('loadBtn').onclick = loadStudents;
