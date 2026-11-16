@@ -1,5 +1,6 @@
 let customers = [];
 let polos = [];
+let originalComplements = new Map();
 
 const tbody = document.getElementById('tbody');
 const msg = document.getElementById('msg');
@@ -70,6 +71,7 @@ document.getElementById('loadBtn').onclick = async () => {
   try {
     const j = await api('/api/asaas/by-polo?complement=' + encodeURIComponent(polo));
     customers = j.data || [];
+    originalComplements = new Map(customers.map(c => [c.id, String(c.complement || '').trim()]));
     render();
     msg.className = 'msg ok';
     msg.textContent = `${customers.length} cliente(s) vinculado(s) ao Polo ${polo}.`;
@@ -90,21 +92,47 @@ document.getElementById('applyComplement').onclick = () => {
 };
 
 document.getElementById('saveAsaas').onclick = async () => {
-  const complement = document.getElementById('newComplement').value.trim() || customers[0]?.complement;
-  if (!customers.length || !complement) return;
+  const changes = customers.filter(c => String(c.complement || '').trim() !== originalComplements.get(c.id));
+  if (!customers.length) {
+    msg.textContent = 'Carregue os clientes de um Polo antes de atualizar.';
+    msg.className = 'msg';
+    return;
+  }
+  if (!changes.length) {
+    msg.textContent = 'Nenhuma alteração detectada. Edite a coluna Complemento ou clique em Aplicar filtro na coluna complemento.';
+    msg.className = 'msg';
+    return;
+  }
+  if (changes.some(c => !String(c.complement || '').trim())) {
+    msg.textContent = 'Preencha o complemento de todos os clientes alterados.';
+    msg.className = 'msg';
+    return;
+  }
+  const saveBtn = document.getElementById('saveAsaas');
+  saveBtn.disabled = true;
   msg.textContent = 'Atualizando clientes no Asaas...';
   msg.className = 'msg';
   try {
     const j = await api('/api/asaas/update-complement', {
       method: 'POST',
-      body: JSON.stringify({ complement, customers })
+      body: JSON.stringify({ customers: changes.map(c => ({ id: c.id, complement: String(c.complement).trim() })) })
     });
-    msg.className = 'msg ok';
-    msg.textContent = `Atualizados: ${j.success}. Falhas: ${j.failed}.`;
+    for (const result of j.results || []) {
+      if (result.ok) originalComplements.set(result.id, result.complement);
+    }
+    const failures = (j.results || []).filter(r => !r.ok);
+    const warnings = (j.results || []).filter(r => r.warning);
+    msg.className = j.failed || warnings.length ? 'msg' : 'msg ok';
+    msg.textContent = `Confirmados no Asaas: ${j.success}. Falhas: ${j.failed}.`;
+    if (failures.length) msg.textContent += ' Erros: ' + failures.map(r => `${r.id}: ${r.error}`).join(' | ');
+    if (warnings.length) msg.textContent += ` Atenção: ${warnings.length} cadastro(s) sem sincronização local.`;
+    if (j.success) msg.textContent += ' Para consultar o novo Polo, selecione o complemento atualizado e clique em Aplicar.';
     await loadPolos(true);
   } catch (e) {
     msg.className = 'msg';
     msg.textContent = e.message;
+  } finally {
+    saveBtn.disabled = false;
   }
 };
 
