@@ -154,6 +154,19 @@ Rotas adicionadas:
 
 Esta atualização não exige alteração no banco D1.
 
+## Correção de 17/11/2026 — Atualizar por Polo
+
+- Edite o complemento de um aluno e clique em **Salvar aluno** para atualizar somente aquele cadastro.
+- O botão **Atualizar cadastros alterados no Asaas** envia apenas as linhas modificadas, sem repetir alunos já confirmados.
+- Cada cadastro é atualizado por seu identificador do Asaas (`cus_...`) usando `PUT /customers/{id}` e confirmado por uma consulta `GET` ao mesmo cadastro.
+- Erros de validação são exibidos na própria linha. Em bloqueios temporários (`HTTP 429`) o sistema respeita `RateLimit-Reset`, aguarda e tenta novamente sem criar novos clientes.
+- A lista de polos é atualizada após a operação. Alunos que mudaram de Polo deixam de aparecer no Polo antigo após clicar novamente em **Aplicar**.
+- O cache do PWA foi renovado e os arquivos JavaScript/CSS passam a priorizar a versão online atualizada. Depois do deploy, recarregue a tela; caso o aplicativo estivesse aberto durante a publicação, feche e abra uma vez para ativar o novo Service Worker.
+- Não é necessária nova migração SQL para esta correção. A sincronização local depende da coluna `students.asaas_id`, prevista no `schema.sql` e na migração `migration_add_asaas_id.sql` já existente.
+- Testes automatizados locais foram executados com respostas simuladas do Asaas. É necessário testar um aluno real após publicar, pois estes testes não utilizaram a chave de produção.
+
+O pacote continua com **99 arquivos**, respeitando o limite solicitado para upload pelo site do GitHub.
+
 ## Enviar pelo site do GitHub
 
 Este pacote foi organizado para ter menos de 100 arquivos, limite aceito pelo envio no navegador do GitHub.

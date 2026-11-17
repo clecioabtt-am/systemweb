@@ -1,6 +1,8 @@
 let customers = [];
 let polos = [];
 let originalComplements = new Map();
+const rowStatuses = new Map();
+let saving = false;
 
 const tbody = document.getElementById('tbody');
 const msg = document.getElementById('msg');
@@ -50,16 +52,36 @@ function render() {
     <tr>
       <td>${escapeHtml(c.name || '')}</td>
       <td>${escapeHtml(c.cpfCnpj || '')}</td>
-      <td><input data-i="${i}" value="${escapeHtml(c.complement || '')}"></td>
+      <td><input data-i="${i}" value="${escapeHtml(c.complement || '')}" ${saving ? 'disabled' : ''}></td>
+      <td data-status-i="${i}">${escapeHtml(rowStatuses.get(c.id) || '')}</td>
+      <td><button class="btn ghost" type="button" data-save-i="${i}" ${saving ? 'disabled' : ''}>Salvar aluno</button></td>
     </tr>
   `).join('');
-  count.textContent = `${customers.length} cliente(s)`;
+  count.textContent = `${customers.length} cliente(s) — somente os alterados serão enviados`;
   tbody.querySelectorAll('input').forEach(inp => {
-    inp.oninput = () => customers[inp.dataset.i].complement = inp.value;
+    inp.oninput = () => {
+      const customer = customers[Number(inp.dataset.i)];
+      customer.complement = inp.value;
+      setRowStatus(customer.id, 'Alteração pendente');
+    };
+  });
+  tbody.querySelectorAll('[data-save-i]').forEach(button => {
+    button.onclick = () => saveChanges([customers[Number(button.dataset.saveI)]]);
   });
 }
 
+function setRowStatus(id, message) {
+  rowStatuses.set(id, message);
+  const index = customers.findIndex(c => c.id === id);
+  if (index >= 0) {
+    const cell = Array.from(tbody.querySelectorAll('[data-status-i]'))
+      .find(el => Number(el.dataset.statusI) === index);
+    if (cell) cell.textContent = message;
+  }
+}
+
 document.getElementById('loadBtn').onclick = async () => {
+  if (saving) return;
   const polo = poloSelect.value.trim();
   if (!polo) {
     msg.className = 'msg';
@@ -72,6 +94,7 @@ document.getElementById('loadBtn').onclick = async () => {
     const j = await api('/api/asaas/by-polo?complement=' + encodeURIComponent(polo));
     customers = j.data || [];
     originalComplements = new Map(customers.map(c => [c.id, String(c.complement || '').trim()]));
+    rowStatuses.clear();
     render();
     msg.className = 'msg ok';
     msg.textContent = `${customers.length} cliente(s) vinculado(s) ao Polo ${polo}.`;
@@ -83,16 +106,23 @@ document.getElementById('loadBtn').onclick = async () => {
 };
 
 document.getElementById('applyComplement').onclick = () => {
+  if (saving) return;
   const v = document.getElementById('newComplement').value.trim();
   if (!v) return;
   customers = customers.map(c => ({ ...c, complement: v }));
+  for (const c of customers) {
+    if (v !== originalComplements.get(c.id)) rowStatuses.set(c.id, 'Alteração pendente');
+  }
   render();
   msg.className = 'msg ok';
   msg.textContent = 'Complemento aplicado na coluna.';
 };
 
-document.getElementById('saveAsaas').onclick = async () => {
-  const changes = customers.filter(c => String(c.complement || '').trim() !== originalComplements.get(c.id));
+function wait(ms) { return new Promise(resolve => setTimeout(resolve, ms)); }
+
+async function saveChanges(selection = customers) {
+  if (saving) return;
+  const changes = selection.filter(c => String(c.complement || '').trim() !== originalComplements.get(c.id));
   if (!customers.length) {
     msg.textContent = 'Carregue os clientes de um Polo antes de atualizar.';
     msg.className = 'msg';
@@ -103,38 +133,82 @@ document.getElementById('saveAsaas').onclick = async () => {
     msg.className = 'msg';
     return;
   }
-  if (changes.some(c => !String(c.complement || '').trim())) {
-    msg.textContent = 'Preencha o complemento de todos os clientes alterados.';
+  if (changes.some(c => !String(c.complement || '').trim() || String(c.complement).trim().length > 255)) {
+    msg.textContent = 'O complemento dos alunos alterados deve ter de 1 a 255 caracteres.';
     msg.className = 'msg';
     return;
   }
   const saveBtn = document.getElementById('saveAsaas');
+  saving = true;
   saveBtn.disabled = true;
-  msg.textContent = 'Atualizando clientes no Asaas...';
+  tbody.querySelectorAll('input, button').forEach(el => { el.disabled = true; });
+  document.getElementById('loadBtn').disabled = true;
+  document.getElementById('applyComplement').disabled = true;
+  refreshPolosBtn.disabled = true;
+  msg.textContent = `Preparando atualização de ${changes.length} aluno(s)...`;
   msg.className = 'msg';
+  let success = 0;
+  const failures = [];
+  const warnings = [];
   try {
-    const j = await api('/api/asaas/update-complement', {
-      method: 'POST',
-      body: JSON.stringify({ customers: changes.map(c => ({ id: c.id, complement: String(c.complement).trim() })) })
-    });
-    for (const result of j.results || []) {
-      if (result.ok) originalComplements.set(result.id, result.complement);
+    // Uma solicitação por aluno: falhas de um cadastro não interrompem os outros,
+    // e o Asaas consegue aplicar os próprios limites de requisições.
+    for (let index = 0; index < changes.length; index++) {
+      const customer = changes[index];
+      const complement = String(customer.complement).trim();
+      let result;
+      for (let attempt = 0; attempt < 5; attempt++) {
+        setRowStatus(customer.id, attempt ? `Nova tentativa ${attempt}/4...` : 'Enviando ao Asaas...');
+        try {
+          const response = await api('/api/asaas/update-complement', {
+            method: 'POST',
+            body: JSON.stringify({ customers: [{ id: customer.id, complement }] })
+          });
+          result = response.results?.[0] || { ok: false, error: 'Resposta sem confirmação do cliente.' };
+        } catch (err) {
+          result = { ok: false, error: err.message || 'Falha de comunicação.', retryable: false };
+        }
+        if (result.ok || !result.retryable || attempt === 4) break;
+        // Aguardar RateLimit-Reset quando houver HTTP 429; nunca tentar imediatamente.
+        const seconds = result.retryAfterSeconds > 0
+          ? Math.min(90, Math.ceil(result.retryAfterSeconds) + 1)
+          : Math.min(45, Math.pow(2, attempt + 1) * 3);
+        setRowStatus(customer.id, `Asaas temporariamente indisponível; aguardando ${seconds}s...`);
+        await wait(seconds * 1000);
+      }
+      if (result.ok) {
+        success++;
+        originalComplements.set(customer.id, complement);
+        setRowStatus(customer.id, result.warning ? `Confirmado; ${result.warning}` : 'Confirmado no Asaas');
+        if (result.warning) warnings.push({ customer, error: result.warning });
+      } else {
+        const reason = `${result.status ? `HTTP ${result.status}: ` : ''}${result.error || 'Não confirmado'}`;
+        failures.push({ customer, error: reason });
+        setRowStatus(customer.id, `Falha: ${reason}`);
+      }
+      msg.textContent = `Processados: ${index + 1}/${changes.length}. Confirmados: ${success}. Falhas: ${failures.length}.`;
+      if (index < changes.length - 1) await wait(500);
     }
-    const failures = (j.results || []).filter(r => !r.ok);
-    const warnings = (j.results || []).filter(r => r.warning);
-    msg.className = j.failed || warnings.length ? 'msg' : 'msg ok';
-    msg.textContent = `Confirmados no Asaas: ${j.success}. Falhas: ${j.failed}.`;
-    if (failures.length) msg.textContent += ' Erros: ' + failures.map(r => `${r.id}: ${r.error}`).join(' | ');
+    msg.className = failures.length || warnings.length ? 'msg' : 'msg ok';
+    msg.textContent = `Confirmados no Asaas: ${success}. Falhas: ${failures.length}.`;
+    if (failures.length) msg.textContent += ' Erros: ' + failures.map(r => `${r.customer.name || r.customer.id}: ${r.error}`).join(' | ');
     if (warnings.length) msg.textContent += ` Atenção: ${warnings.length} cadastro(s) sem sincronização local.`;
-    if (j.success) msg.textContent += ' Para consultar o novo Polo, selecione o complemento atualizado e clique em Aplicar.';
-    await loadPolos(true);
+    if (success) msg.textContent += ' Para consultar o novo Polo, selecione o complemento atualizado e clique em Aplicar.';
+    try { await loadPolos(true); } catch { /* A confirmação dos alunos independe da lista de polos. */ }
   } catch (e) {
     msg.className = 'msg';
     msg.textContent = e.message;
   } finally {
+    saving = false;
     saveBtn.disabled = false;
+    document.getElementById('loadBtn').disabled = false;
+    document.getElementById('applyComplement').disabled = false;
+    refreshPolosBtn.disabled = false;
+    tbody.querySelectorAll('input, button').forEach(el => { el.disabled = false; });
   }
-};
+}
+
+document.getElementById('saveAsaas').onclick = () => saveChanges();
 
 refreshPolosBtn.onclick = () => loadPolos(true);
 loadPolos(false);

@@ -5,7 +5,8 @@ export async function onRequestPost({ request, env, data }) {
     const body = await request.json();
     const customers = Array.isArray(body.customers) ? body.customers : [];
     if (!customers.length) return json({ ok: false, error: 'Nenhum cliente informado.' }, 400);
-    if (customers.length > 500) return json({ ok: false, error: 'Limite de 500 clientes por atualização.' }, 400);
+    // Lotes menores evitam timeout e facilitam a recuperação de erros do Asaas.
+    if (customers.length > 10) return json({ ok: false, error: 'Envie no máximo 10 clientes por solicitação.' }, 400);
 
     const results = [];
     const seen = new Set();
@@ -38,7 +39,15 @@ export async function onRequestPost({ request, env, data }) {
         }
         results.push({ id, ok: true, complement, warning });
       } catch (e) {
-        results.push({ id, ok: false, error: e.message });
+        const status = Number(e.status) || null;
+        results.push({
+          id, ok: false, error: e.message || 'Falha na atualização do cliente.',
+          status, code: e.code || null,
+          retryable: status === 429 || (status === 403 && e.retryAfterSeconds > 0) ||
+            (status >= 500 && status <= 504) ||
+            (status === null && !/inválido|duplicado|vazio|255 caracteres/i.test(e.message || '')),
+          retryAfterSeconds: e.retryAfterSeconds ?? null
+        });
       }
     }
     await log(env, data?.user, 'asaas.customers.bulk_complement', 'customers', { total: customers.length, success: results.filter(r => r.ok).length }, request);

@@ -36,6 +36,13 @@ export async function asaasFetch(env, path, options = {}) {
     const error = new Error(msg);
     error.payload = data;
     error.status = res.status;
+    error.code = data?.errors?.[0]?.code || null;
+    const reset = Number(res.headers.get('RateLimit-Reset'));
+    const retryAfter = Number(res.headers.get('Retry-After'));
+    error.retryAfterSeconds = (res.status === 429 || res.status === 403)
+      ? (Number.isFinite(reset) && reset > 0 ? reset :
+        Number.isFinite(retryAfter) && retryAfter > 0 ? retryAfter : null)
+      : null;
     throw error;
   }
   return data;
